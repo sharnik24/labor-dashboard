@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Labor Dashboard</title>
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background-color: #f2f2f2; }
+        .expiring { background-color: #ffcccc; }
+    </style>
+</head>
+<body>
+    <h1>Labor Dashboard</h1>
+    <h2>Employees Expiring Soon</h2>
+    <table>
+        <tr>
+            <th>Name</th><th>Company</th><th>Position</th><th>Expiry Date</th>
+        </tr>
+        {% for emp in expiring %}
+        <tr class="expiring">
+            <td>{{ emp['Name'] }}</td>
+            <td>{{ emp['Company'] }}</td>
+            <td>{{ emp['Position'] }}</td>
+            <td>{{ emp['Expiry Date'] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>All Employees</h2>
+    <table>
+        <tr>
+            <th>Name</th><th>Company</th><th>Position</th><th>Expiry Date</th>
+        </tr>
+        {% for emp in all_employees %}
+        <tr>
+            <td>{{ emp['Name'] }}</td>
+            <td>{{ emp['Company'] }}</td>
+            <td>{{ emp['Position'] }}</td>
+            <td>{{ emp['Expiry Date'] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
