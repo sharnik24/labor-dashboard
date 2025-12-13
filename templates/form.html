@@ -7,22 +7,25 @@
 <body class="bg-light">
 
 <div class="container mt-5 col-md-6">
-    <div class="card shadow">
-        <div class="card-body">
-            <h4>Add Employee</h4>
-            <form method="POST">
-                <input name="company" value="{{ company }}" class="form-control mb-2" readonly>
-                <input name="name" class="form-control mb-2" placeholder="Name" required>
-                <input name="position" class="form-control mb-2" placeholder="Position">
-                <input type="date" name="expiry" class="form-control mb-2" required>
-                <input name="status" class="form-control mb-2" placeholder="Status">
-                <input name="email" class="form-control mb-2" placeholder="Email">
-                <input name="whatsapp" class="form-control mb-2" placeholder="WhatsApp">
-                <button class="btn btn-success">Save</button>
-                <a href="/" class="btn btn-secondary">Cancel</a>
-            </form>
-        </div>
-    </div>
+<div class="card shadow">
+<div class="card-body">
+
+<h4>Add Employee</h4>
+
+<form method="POST">
+    <input name="company" value="{{ company }}" class="form-control mb-2" readonly>
+    <input name="name" class="form-control mb-2" placeholder="Name" required>
+    <input name="position" class="form-control mb-2" placeholder="Position">
+    <input type="date" name="expiry" class="form-control mb-2" required>
+    <input name="status" class="form-control mb-2" placeholder="Status">
+    <input name="email" class="form-control mb-2" placeholder="Email">
+    <input name="whatsapp" class="form-control mb-2" placeholder="WhatsApp">
+    <button class="btn btn-success">Save</button>
+    <a href="/" class="btn btn-secondary">Cancel</a>
+</form>
+
+</div>
+</div>
 </div>
 
 </body>
