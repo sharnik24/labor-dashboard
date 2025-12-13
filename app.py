@@ -1,103 +1,104 @@
 from flask import Flask, render_template, request, redirect, url_for
 from datetime import date, datetime
 from my_utils import get_all_data, add_employee, update_employee
+from collections import defaultdict
 
 app = Flask(__name__)
 
-# Dashboard route
+def days_left(expiry):
+    exp_date = datetime.strptime(expiry, "%Y-%m-%d").date()
+    return (exp_date - date.today()).days
+
 @app.route("/")
 def dashboard():
-    try:
-        all_employees = get_all_data()
-        today = date.today()
-        reminders = []
+    all_data = get_all_data()
 
-        companies = sorted(list(set(emp["Company"] for emp in all_employees)))
+    reminders = []
+    company_map = defaultdict(list)
+    companies = set()
 
-        for emp in all_employees:
-            expiry_str = emp.get("Expiry")
-            try:
-                expiry_date = datetime.strptime(expiry_str, "%Y-%m-%d").date()
-                days_left = (expiry_date - today).days
-                emp["days_left"] = days_left
+    for emp in all_data:
+        emp["days_left"] = days_left(emp["Expiry"])
+        companies.add(emp["Company"])
 
-                if expiry_date < today:
-                    emp["status"] = "Expired"
-                elif 0 <= days_left <= 7:
-                    emp["status"] = "Expiring Soon"
-                    reminders.append({
-                        "name": emp["Name"],
-                        "company": emp["Company"],
-                        "position": emp["Position"],
-                        "expiry": expiry_str,
-                        "days_left": days_left
-                    })
-                else:
-                    emp["status"] = "Valid"
+        if emp["days_left"] < 0:
+            emp["status"] = "Expired"
+        elif emp["days_left"] <= 7:
+            emp["status"] = "Expiring Soon"
+            reminders.append(emp)
+        else:
+            emp["status"] = "Valid"
 
-            except Exception as e:
-                emp["days_left"] = "N/A"
-                emp["status"] = "Invalid Date"
-                print(f"Error parsing date for {emp.get('Name', 'Unknown')}: {e}")
+        company_map[emp["Company"]].append(emp)
 
-        return render_template(
-            "dashboard.html",
-            all_employees=all_employees,
-            today=today.isoformat(),
-            reminders=reminders,
-            companies=companies
-        )
+    return render_template(
+        "dashboard.html",
+        reminders=reminders,
+        company_map=company_map,
+        companies=sorted(companies),
+        selected_company=None
+    )
 
-    except Exception as e:
-        return f"Error in dashboard: {e}"
+@app.route("/company/<company>")
+def company_view(company):
+    all_data = get_all_data()
 
+    filtered = []
+    reminders = []
 
-# Add new employee
+    for emp in all_data:
+        if emp["Company"] == company:
+            emp["days_left"] = days_left(emp["Expiry"])
+
+            if emp["days_left"] < 0:
+                emp["status"] = "Expired"
+            elif emp["days_left"] <= 7:
+                emp["status"] = "Expiring Soon"
+                reminders.append(emp)
+            else:
+                emp["status"] = "Valid"
+
+            filtered.append(emp)
+
+    return render_template(
+        "dashboard.html",
+        reminders=reminders,
+        company_map={company: filtered},
+        companies=[],
+        selected_company=company
+    )
+
 @app.route("/add", methods=["GET", "POST"])
 def add_worker():
-    try:
-        if request.method == "POST":
-            data = {
-                "Company": request.form.get("company"),
-                "Name": request.form.get("name"),
-                "Position": request.form.get("position"),
-                "Expiry": request.form.get("expiry"),
-                "Email": request.form.get("email"),
-                "WhatsAppNumber": request.form.get("whatsapp")
-            }
-            add_employee(data)
-            return redirect(url_for("dashboard"))
-        return render_template("form.html", data={}, action="Add")
-    except Exception as e:
-        return f"Error in add_worker: {e}"
+    if request.method == "POST":
+        add_employee({
+            "Company": request.form["company"],
+            "Name": request.form["name"],
+            "Position": request.form["position"],
+            "Expiry": request.form["expiry"],
+            "Email": request.form["email"],
+            "WhatsAppNumber": request.form["whatsapp"]
+        })
+        return redirect(url_for("dashboard"))
+    return render_template("form.html", data={}, action="Add")
 
-
-# Edit employee
 @app.route("/edit/<company>/<name>", methods=["GET", "POST"])
 def edit_worker(company, name):
-    try:
-        all_employees = get_all_data()
-        employee = next((emp for emp in all_employees if emp["Company"] == company and emp["Name"] == name), None)
-        if not employee:
-            return "Employee not found"
+    all_data = get_all_data()
+    emp = next(e for e in all_data if e["Company"] == company and e["Name"] == name)
 
-        if request.method == "POST":
-            new_data = {
-                "Company": request.form.get("company"),
-                "Name": request.form.get("name"),
-                "Position": request.form.get("position"),
-                "Expiry": request.form.get("expiry"),
-                "Email": request.form.get("email"),
-                "WhatsAppNumber": request.form.get("whatsapp")
-            }
-            update_employee(company, name, new_data)
-            return redirect(url_for("dashboard"))
+    if request.method == "POST":
+        update_employee(company, name, {
+            "Company": request.form["company"],
+            "Name": request.form["name"],
+            "Position": request.form["position"],
+            "Expiry": request.form["expiry"],
+            "Email": request.form["email"],
+            "WhatsAppNumber": request.form["whatsapp"]
+        })
+        return redirect(url_for("dashboard"))
 
-        return render_template("form.html", data=employee, action="Edit")
-
-    except Exception as e:
-        return f"Error in edit_worker: {e}"
-
+    return render_template("form.html", data=emp, action="Edit")
 
 if __name__ == "__main__":
     app.run(debug=True)
