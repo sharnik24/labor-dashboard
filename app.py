@@ -4,51 +4,57 @@ from my_utils import get_all_data, add_employee, update_employee
 
 app = Flask(__name__)
 
-# ------------------- DASHBOARD -------------------
 @app.route("/")
 def dashboard():
     try:
         all_employees = get_all_data()
-
-        # Calculate days left and check expiry
         today = date.today()
+        
+        # Prepare reminders
+        reminders = []
         for emp in all_employees:
-            expiry_date = datetime.strptime(emp["Expiry"], "%Y-%m-%d").date()
-            emp["DaysLeft"] = (expiry_date - today).days
-            emp["Status"] = "Expired" if emp["DaysLeft"] < 0 else "Expiring Soon" if emp["DaysLeft"] <= 7 else "Valid"
-
-        # List of unique companies
-        companies = sorted(set(emp["Company"] for emp in all_employees))
-
-        # Optional filter by company
-        selected_company = request.args.get("company")
-        if selected_company:
-            filtered_employees = [emp for emp in all_employees if emp["Company"] == selected_company]
-        else:
-            filtered_employees = all_employees
-
+            expiry_date = datetime.strptime(emp['Expiry'], "%Y-%m-%d").date()
+            days_left = (expiry_date - today).days
+            if days_left <= 7:
+                reminders.append({
+                    "Name": emp['Name'],
+                    "Position": emp['Position'],
+                    "Company": emp['Company'],
+                    "Expiry": emp['Expiry'],
+                    "DaysLeft": days_left
+                })
+        
+        # Get unique company list
+        companies = sorted(list({emp['Company'] for emp in all_employees}))
+        
         return render_template(
             "dashboard.html",
-            employees=filtered_employees,
+            all_employees=all_employees,
+            reminders=reminders,
             companies=companies,
-            selected_company=selected_company
+            today=today
         )
     except Exception as e:
-        return f"Error loading dashboard: {e}", 500
+        return f"Error: {e}"
 
-# ------------------- ADD EMPLOYEE -------------------
+@app.route("/company/<company_name>")
+def company_view(company_name):
+    all_employees = get_all_data()
+    company_employees = [emp for emp in all_employees if emp['Company'] == company_name]
+    return render_template(
+        "company.html",
+        employees=company_employees,
+        company_name=company_name
+    )
+
 @app.route("/add", methods=["GET", "POST"])
-def add():
+def add_worker():
     if request.method == "POST":
-        try:
-            data = {
-                "Company": request.form.get("Company", "").strip(),
-                "Name": request.form.get("Name", "").strip(),
-                "Position": request.form.get("Position", "").strip(),
-                "Expiry": request.form.get("Expiry", "").strip(),
-                "Email": request.form.get("Email", "").strip(),
-                "WhatsAppNumber": request.form.get("WhatsAppNumber", "").strip()
-            }
-
-            # Validation
-            if not data["Company"] or not data["]()
+        data = {
+            "Company": request.form.get("company"),
+            "Name": request.form.get("name"),
+            "Position": request.form.get("position"),
+            "Expiry": request.form.get("expiry"),
+            "Email": request.form.get("email"),
+            "WhatsAppNumber": request.form.get("whatsapp")
+        }
