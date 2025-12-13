@@ -3,85 +3,65 @@ from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 
 # Google Sheets setup
-SCOPE = ["https://spreadsheets.google.com/feeds",
-         "https://www.googleapis.com/auth/drive"]
-CREDS_FILE = "credentials.json"  # Make sure this file is in your project root
 SHEET_NAME = "labor_data"
+CREDENTIALS_FILE = "credentials.json"  # Path to your Google service account JSON
 
-try:
-    creds = ServiceAccountCredentials.from_json_keyfile_name(CREDS_FILE, SCOPE)
-    client = gspread.authorize(creds)
-    sheet = client.open(SHEET_NAME).sheet1
-except gspread.SpreadsheetNotFound:
-    sheet = None
-    print(f"ERROR: Spreadsheet '{SHEET_NAME}' not found or access not granted.")
-except Exception as e:
-    sheet = None
-    print(f"ERROR: Could not open spreadsheet. Details: {e}")
-
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+credentials = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_FILE, scope)
+client = gspread.authorize(credentials)
+sheet = client.open(SHEET_NAME).sheet1
 
 def get_all_data():
-    if not sheet:
-        return []
-    try:
-        data = sheet.get_all_records()
-        return data
-    except Exception as e:
-        print(f"ERROR: Failed to get data from sheet. Details: {e}")
-        return []
+    """Fetch all rows from the sheet"""
+    records = sheet.get_all_records()  # returns list of dicts
+    return records
 
+def get_companies():
+    """Get unique company names"""
+    records = get_all_data()
+    companies = list({row['Company'] for row in records})
+    return sorted(companies)
 
-def add_employee(employee_data):
-    """
-    employee_data = {
-        "Company": "Company Name",
-        "Name": "Employee Name",
-        "Position": "Job Title",
-        "Expiry": "YYYY-MM-DD",
-        "Email": "email@example.com",
-        "WhatsAppNumber": "971XXXXXXXXX"
-    }
-    """
-    if not sheet:
-        return {"status": "error", "message": "Spreadsheet not accessible"}
+def get_employees_by_company(company_name):
+    """Return employees for a given company"""
+    records = get_all_data()
+    employees = [row for row in records if row['Company'] == company_name]
+    return employees
 
-    try:
-        # Append a new row
-        row = [
-            employee_data.get("Company", ""),
-            employee_data.get("Name", ""),
-            employee_data.get("Position", ""),
-            employee_data.get("Expiry", ""),
-            employee_data.get("Email", ""),
-            employee_data.get("WhatsAppNumber", "")
-        ]
-        sheet.append_row(row)
-        return {"status": "success", "message": "Employee added"}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
+def add_employee(company_name, name, position, expiry, status, email, whatsapp):
+    """Add new employee to the sheet"""
+    # Append to the sheet
+    new_row = [company_name, name, position, expiry, status, email, whatsapp]
+    sheet.append_row(new_row)
+    return True
 
 def update_employee(row_index, new_data):
-    """
-    row_index: the row number in the sheet (1-based)
-    new_data: dictionary with keys matching column headers
-    """
-    if not sheet:
-        return {"status": "error", "message": "Spreadsheet not accessible"}
+    """Update employee at row_index (1-based)"""
+    # row_index = index in sheet (starting from 2 if header row is 1)
+    sheet.update_cell(row_index, 2, new_data.get("Name", ""))
+    sheet.update_cell(row_index, 3, new_data.get("Position", ""))
+    sheet.update_cell(row_index, 4, new_data.get("Expiry", ""))
+    sheet.update_cell(row_index, 5, new_data.get("Status", ""))
+    sheet.update_cell(row_index, 6, new_data.get("Email", ""))
+    sheet.update_cell(row_index, 7, new_data.get("WhatsApp", ""))
+    return True
 
-    try:
-        if "Company" in new_data:
-            sheet.update_cell(row_index, 1, new_data["Company"])
-        if "Name" in new_data:
-            sheet.update_cell(row_index, 2, new_data["Name"])
-        if "Position" in new_data:
-            sheet.update_cell(row_index, 3, new_data["Position"])
-        if "Expiry" in new_data:
-            sheet.update_cell(row_index, 4, new_data["Expiry"])
-        if "Email" in new_data:
-            sheet.update_cell(row_index, 5, new_data["Email"])
-        if "WhatsAppNumber" in new_data:
-            sheet.update_cell(row_index, 6, new_data["WhatsAppNumber"])
-        return {"status": "success", "message": "Employee updated"}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
+def get_reminder_employees():
+    """Employees whose expiry is within 30 days"""
+    today = datetime.today().date()
+    reminder_list = []
+    records = get_all_data()
+    for row in records:
+        try:
+            expiry_date = datetime.strptime(row['Expiry'], "%Y-%m-%d").date()
+            days_left = (expiry_date - today).days
+            if days_left <= 30:
+                reminder_list.append({
+                    "Name": row['Name'],
+                    "Position": row['Position'],
+                    "Expiry": row['Expiry'],
+                    "DaysLeft": days_left
+                })
+        except:
+            continue
+    return reminder_list
