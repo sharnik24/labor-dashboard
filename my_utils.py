@@ -11,7 +11,7 @@ SCOPES = [
 SHEET_NAME = "labor_data"
 
 def get_sheet():
-    creds = Credentials.from_service_account_file("credentials.json", scopes=SCOPES)
+    creds = Credentials.from_service_account_file("/etc/secrets/credentials.json", scopes=SCOPES)
     gc = gspread.authorize(creds)
     sh = gc.open(SHEET_NAME)
     worksheet = sh.sheet1
@@ -33,3 +33,4 @@ def get_expiring_soon(days=6):
             if 0 <= (expiry_date - today).days <= days:
                 expiring.append(row)
     return expiring
+
