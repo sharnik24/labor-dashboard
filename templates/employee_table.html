@@ -1,0 +1,38 @@
+<table class="table table-striped table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Company</th>
+            <th>Name</th>
+            <th>Position</th>
+            <th>Expiry</th>
+            <th>Days Left</th>
+            <th>Status</th>
+            <th>Email</th>
+            <th>WhatsApp</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for emp in all_employees %}
+        {% if emp.Company == comp or comp is none %}
+        <tr {% if emp.status == "Expired" %} class="table-danger" {% elif emp.status == "Expiring Soon" %} class="table-warning" {% endif %}>
+            <td>{{ emp.Company }}</td>
+            <td>{{ emp.Name }}</td>
+            <td>{{ emp.Position }}</td>
+            <td>{{ emp.Expiry }}</td>
+            <td>{{ emp.days_left }}</td>
+            <td>
+                <span class="badge {% if emp.status == 'Expired' %}bg-danger{% elif emp.status == 'Expiring Soon' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                    {{ emp.status }}
+                </span>
+            </td>
+            <td>{{ emp.Email }}</td>
+            <td>{{ emp.WhatsAppNumber }}</td>
+            <td>
+                <a href="/edit/{{ emp.Company }}/{{ emp.Name }}" class="btn btn-sm btn-warning">Edit</a>
+            </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
