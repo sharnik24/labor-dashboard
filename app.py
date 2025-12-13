@@ -1,74 +1,54 @@
 from flask import Flask, render_template, request, redirect, url_for
-from datetime import datetime, date
+from datetime import date, datetime
 from my_utils import get_all_data, add_employee, update_employee
 
 app = Flask(__name__)
 
+# ------------------- DASHBOARD -------------------
 @app.route("/")
 def dashboard():
-    employees = get_all_data()
-    today = date.today()
+    try:
+        all_employees = get_all_data()
 
-    for emp in employees:
-        expiry = datetime.strptime(emp["Expiry"], "%Y-%m-%d").date()
-        emp["days_left"] = (expiry - today).days
-        emp["status"] = "Expired" if emp["days_left"] < 0 else "Valid"
+        # Calculate days left and check expiry
+        today = date.today()
+        for emp in all_employees:
+            expiry_date = datetime.strptime(emp["Expiry"], "%Y-%m-%d").date()
+            emp["DaysLeft"] = (expiry_date - today).days
+            emp["Status"] = "Expired" if emp["DaysLeft"] < 0 else "Expiring Soon" if emp["DaysLeft"] <= 7 else "Valid"
 
-    companies = sorted(set(e["Company"] for e in employees))
+        # List of unique companies
+        companies = sorted(set(emp["Company"] for emp in all_employees))
 
-    selected_company = request.args.get("company")
+        # Optional filter by company
+        selected_company = request.args.get("company")
+        if selected_company:
+            filtered_employees = [emp for emp in all_employees if emp["Company"] == selected_company]
+        else:
+            filtered_employees = all_employees
 
-    if selected_company:
-        employees = [e for e in employees if e["Company"] == selected_company]
+        return render_template(
+            "dashboard.html",
+            employees=filtered_employees,
+            companies=companies,
+            selected_company=selected_company
+        )
+    except Exception as e:
+        return f"Error loading dashboard: {e}", 500
 
-    reminders = [e for e in employees if 0 <= e["days_left"] <= 7]
-
-    return render_template(
-        "dashboard.html",
-        employees=employees,
-        companies=companies,
-        selected_company=selected_company,
-        reminders=reminders
-    )
-
-
+# ------------------- ADD EMPLOYEE -------------------
 @app.route("/add", methods=["GET", "POST"])
 def add():
     if request.method == "POST":
-        data = {
-            "Company": request.form["Company"],
-            "Name": request.form["Name"],
-            "Position": request.form["Position"],
-            "Expiry": request.form["Expiry"],
-            "Email": request.form["Email"],
-            "WhatsAppNumber": request.form["WhatsAppNumber"]
-        }
-        add_employee(data)
-        return redirect(url_for("dashboard"))
+        try:
+            data = {
+                "Company": request.form.get("Company", "").strip(),
+                "Name": request.form.get("Name", "").strip(),
+                "Position": request.form.get("Position", "").strip(),
+                "Expiry": request.form.get("Expiry", "").strip(),
+                "Email": request.form.get("Email", "").strip(),
+                "WhatsAppNumber": request.form.get("WhatsAppNumber", "").strip()
+            }
 
-    company = request.args.get("company")
-    return render_template("add_employee.html", company=company)
-
-
-@app.route("/edit/<company>/<name>", methods=["GET", "POST"])
-def edit(company, name):
-    employees = get_all_data()
-    emp = next(e for e in employees if e["Company"] == company and e["Name"] == name)
-
-    if request.method == "POST":
-        new_data = {
-            "Company": request.form["Company"],
-            "Name": request.form["Name"],
-            "Position": request.form["Position"],
-            "Expiry": request.form["Expiry"],
-            "Email": request.form["Email"],
-            "WhatsAppNumber": request.form["WhatsAppNumber"]
-        }
-        update_employee(company, name, new_data)
-        return redirect(url_for("dashboard", company=new_data["Company"]))
-
-    return render_template("add_employee.html", company=company, emp=emp)
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
+            # Validation
+            if not data["Company"] or not data["]()
