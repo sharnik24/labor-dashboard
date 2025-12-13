@@ -1,1 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Labor Dashboard</title>
+</head>
+<body>
+    <h1>Labor Dashboard</h1>
+
+    {% if all_employees and all_employees|length > 0 %}
+        <h2>All Employees</h2>
+        <table border="1">
+            <tr>
+                {% for key in all_employees[0].keys() %}
+                <th>{{ key }}</th>
+                {% endfor %}
+            </tr>
+
+            {% for emp in all_employees %}
+            <tr>
+                {% for value in emp.values() %}
+                <td>{{ value }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No employee data found.</p>
+    {% endif %}
+    
+    <h2>Expiring Soon</h2>
+    {% if expiring %}
+        <ul>
+            {% for emp in expiring %}
+            <li>{{ emp["Name"] }} — {{ emp["Expiry Date"] }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No expiring records.</p>
+    {% endif %}
+</body>
+</html>
 
