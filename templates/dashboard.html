@@ -7,61 +7,60 @@
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="/">Labor Dashboard</a>
-  </div>
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">Labor Dashboard</a>
+    </div>
 </nav>
 
 <div class="container">
 
-    <!-- Notifications for expiring work permits -->
+    <!-- Reminder Alerts -->
     {% if reminders %}
     <div class="alert alert-warning alert-dismissible fade show" role="alert">
         <strong>Reminder:</strong>
         <ul class="mb-0">
             {% for r in reminders %}
-            <li>{{ r.name }}'s work permit expires in {{ r.days_left }} days ({{ r.expiry }})</li>
+            <li>{{ r.name }} ({{ r.position }}, {{ r.company }}) work permit expires in {{ r.days_left }} days ({{ r.expiry }})</li>
             {% endfor %}
         </ul>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% else %}
+    <div class="alert alert-success" role="alert">
+        All work permits are renewed!
     </div>
     {% endif %}
 
     <!-- Add Employee Button -->
     <a href="/add" class="btn btn-primary mb-3">Add New Employee</a>
 
-    <!-- Employee Table -->
-    <table class="table table-striped table-bordered table-hover">
-        <thead class="table-dark">
-        <tr>
-            <th>Company</th>
-            <th>Name</th>
-            <th>Position</th>
-            <th>Expiry</th>
-            <th>Email</th>
-            <th>WhatsApp</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for emp in all_employees %}
-        <tr {% if emp['Expiry'] < today %} class="table-danger" {% endif %}>
-            <td>{{ emp['Company'] }}</td>
-            <td>{{ emp['Name'] }}</td>
-            <td>{{ emp['Position'] }}</td>
-            <td>{{ emp['Expiry'] }}</td>
-            <td>{{ emp['Email'] }}</td>
-            <td>{{ emp['WhatsAppNumber'] }}</td>
-            <td>
-                <a href="/edit/{{ emp['Company'] }}/{{ emp['Name'] }}" class="btn btn-sm btn-warning">Edit</a>
-            </td>
-        </tr>
+    <!-- Company Tabs -->
+    <ul class="nav nav-tabs mb-3" id="companyTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">All Companies</button>
+        </li>
+        {% for comp in companies %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="{{ comp|replace(' ', '-') }}-tab" data-bs-toggle="tab" data-bs-target="#{{ comp|replace(' ', '-') }}" type="button" role="tab">{{ comp }}</button>
+        </li>
         {% endfor %}
-        </tbody>
-    </table>
+    </ul>
+
+    <!-- Tab Contents -->
+    <div class="tab-content">
+        <!-- All Companies Tab -->
+        <div class="tab-pane fade show active" id="all" role="tabpanel">
+            {% include 'employee_table.html' with context %}
+        </div>
+        <!-- Individual Company Tabs -->
+        {% for comp in companies %}
+        <div class="tab-pane fade" id="{{ comp|replace(' ', '-') }}" role="tabpanel">
+            {% include 'employee_table.html' with context %}
+        </div>
+        {% endfor %}
+    </div>
 </div>
 
-<!-- Bootstrap JS for alerts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
