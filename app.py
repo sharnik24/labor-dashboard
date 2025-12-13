@@ -14,24 +14,20 @@ app = Flask(__name__)
 
 @app.route("/")
 def dashboard():
-    companies = get_companies()
-    reminders = get_reminder_employees()
-    stats = get_stats()
     return render_template(
         "dashboard.html",
-        companies=companies,
-        reminders=reminders,
-        stats=stats
+        companies=get_companies(),
+        reminders=get_reminder_employees(),
+        stats=get_stats()
     )
 
 
 @app.route("/employees/<company>")
 def employee_table(company):
-    employees = get_employees_by_company(company)
     return render_template(
         "employee_table.html",
         company=company,
-        employees=employees
+        employees=get_employees_by_company(company)
     )
 
 
@@ -60,8 +56,8 @@ def edit(row_id):
         update_employee(row_id, request.form)
         return redirect(url_for("employee_table", company=emp["Company"]))
 
-    return render_template("edit.html", emp=emp, row_id=row_id)
+    return render_template("edit.html", emp=emp)
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
