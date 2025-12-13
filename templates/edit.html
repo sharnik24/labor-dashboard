@@ -7,22 +7,25 @@
 <body class="bg-light">
 
 <div class="container mt-5 col-md-6">
-    <div class="card shadow">
-        <div class="card-body">
-            <h4>Edit Employee</h4>
-            <form method="POST">
-                <input name="company" value="{{ emp.Company }}" class="form-control mb-2">
-                <input name="name" value="{{ emp.Name }}" class="form-control mb-2">
-                <input name="position" value="{{ emp.Position }}" class="form-control mb-2">
-                <input type="date" name="expiry" value="{{ emp.Expiry }}" class="form-control mb-2">
-                <input name="status" value="{{ emp.Status }}" class="form-control mb-2">
-                <input name="email" value="{{ emp.Email }}" class="form-control mb-2">
-                <input name="whatsapp" value="{{ emp.WhatsApp }}" class="form-control mb-2">
-                <button class="btn btn-warning">Update</button>
-                <a href="/" class="btn btn-secondary">Cancel</a>
-            </form>
-        </div>
-    </div>
+<div class="card shadow">
+<div class="card-body">
+
+<h4>Edit Employee</h4>
+
+<form method="POST">
+    <input name="company" value="{{ emp.Company }}" class="form-control mb-2">
+    <input name="name" value="{{ emp.Name }}" class="form-control mb-2">
+    <input name="position" value="{{ emp.Position }}" class="form-control mb-2">
+    <input type="date" name="expiry" value="{{ emp.Expiry }}" class="form-control mb-2">
+    <input name="status" value="{{ emp.Status }}" class="form-control mb-2">
+    <input name="email" value="{{ emp.Email }}" class="form-control mb-2">
+    <input name="whatsapp" value="{{ emp.WhatsApp }}" class="form-control mb-2">
+    <button class="btn btn-warning">Update</button>
+    <a href="/" class="btn btn-secondary">Cancel</a>
+</form>
+
+</div>
+</div>
 </div>
 
 </body>
