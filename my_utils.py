@@ -70,9 +70,19 @@ def get_reminder_employees():
                 reminders.append({
                     "Name": row["Name"],
                     "Company": row["Company"],
+                    "Expiry": row["Expiry"],
                     "DaysLeft": days_left
                 })
         except:
             pass
 
     return reminders
+
+
+def get_stats():
+    data = get_all_data()
+    return {
+        "total_employees": len(data),
+        "total_companies": len({r["Company"] for r in data}),
+        "expiring_soon": len(get_reminder_employees())
+    }
