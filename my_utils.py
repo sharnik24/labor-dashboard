@@ -1,7 +1,8 @@
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+from datetime import datetime
 
-SHEET_NAME = "labor_data"  # your sheet name
+SHEET_NAME = "labor_data"  # your Google Sheet name
 
 def connect_sheet():
     scope = [
@@ -17,7 +18,11 @@ def connect_sheet():
 
 def get_all_data():
     sheet = connect_sheet()
-    return sheet.get_all_records()
+    data = sheet.get_all_records()
+    # Optional: convert expiry to datetime object
+    for row in data:
+        row["Expiry"] = row["Expiry"]
+    return data
 
 def add_employee(data):
     sheet = connect_sheet()
@@ -35,9 +40,14 @@ def update_employee(old_company, old_name, new_data):
     all_records = sheet.get_all_records()
     for i, row in enumerate(all_records):
         if row["Company"] == old_company and row["Name"] == old_name:
-            # Google Sheet rows are 1-indexed and include header row
-            row_number = i + 2
-            sheet.update(f"A{row_number}", [[new_data["Company"], new_data["Name"], new_data["Position"],
-                                             new_data["Expiry"], new_data["Email"], new_data["WhatsAppNumber"]]])
+            row_number = i + 2  # 1-indexed + header row
+            sheet.update(f"A{row_number}", [[
+                new_data["Company"],
+                new_data["Name"],
+                new_data["Position"],
+                new_data["Expiry"],
+                new_data["Email"],
+                new_data["WhatsAppNumber"]
+            ]])
             return True
     return False
