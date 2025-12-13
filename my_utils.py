@@ -10,7 +10,7 @@ def connect_sheet():
 
     creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
     client = gspread.authorize(creds)
-    sheet = client.open("LaborData").sheet1  # Make sure your sheet name matches
+    sheet = client.open("labor_data").sheet1  # Make sure your sheet name matches
     return sheet
 
 # Get all employees
@@ -30,3 +30,4 @@ def add_employee(data):
         data["Email"],
         data["WhatsAppNumber"]
     ])
+
