@@ -4,7 +4,7 @@ from my_utils import get_all_data, add_employee, update_employee
 
 app = Flask(__name__)
 
-# Dashboard route with error handling and reminders
+# Dashboard route
 @app.route("/")
 def dashboard():
     try:
@@ -12,25 +12,40 @@ def dashboard():
         today = date.today()
         reminders = []
 
+        companies = sorted(list(set(emp["Company"] for emp in all_employees)))
+
         for emp in all_employees:
             expiry_str = emp.get("Expiry")
             try:
                 expiry_date = datetime.strptime(expiry_str, "%Y-%m-%d").date()
                 days_left = (expiry_date - today).days
-                if 0 <= days_left <= 7:  # Reminder threshold
+                emp["days_left"] = days_left
+
+                if expiry_date < today:
+                    emp["status"] = "Expired"
+                elif 0 <= days_left <= 7:
+                    emp["status"] = "Expiring Soon"
                     reminders.append({
                         "name": emp["Name"],
+                        "company": emp["Company"],
+                        "position": emp["Position"],
                         "expiry": expiry_str,
                         "days_left": days_left
                     })
+                else:
+                    emp["status"] = "Valid"
+
             except Exception as e:
+                emp["days_left"] = "N/A"
+                emp["status"] = "Invalid Date"
                 print(f"Error parsing date for {emp.get('Name', 'Unknown')}: {e}")
 
         return render_template(
             "dashboard.html",
             all_employees=all_employees,
             today=today.isoformat(),
-            reminders=reminders
+            reminders=reminders,
+            companies=companies
         )
 
     except Exception as e:
