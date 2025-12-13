@@ -1,13 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for
-from my_utils import get_all_data, add_employee
+from my_utils import get_all_data, add_employee, update_employee
 
 app = Flask(__name__)
 
 @app.route("/")
 def dashboard():
     all_employees = get_all_data()
-    print("Dashboard data:", all_employees)  # debug print
-    return render_template("dashboard.html", all_employees=all_employees, expiring=[])
+    return render_template("dashboard.html", all_employees=all_employees)
 
 @app.route("/add", methods=["GET", "POST"])
 def add_worker():
@@ -20,14 +19,34 @@ def add_worker():
             "Email": request.form.get("email"),
             "WhatsAppNumber": request.form.get("whatsapp")
         }
-        print("Adding employee:", data)  # debug print
         add_employee(data)
         return redirect(url_for("dashboard"))
-    return render_template("form.html")
+    return render_template("form.html", data={}, action="Add")
 
-@app.route("/edit")
-def edit_worker():
-    return render_template("edit.html")
+@app.route("/edit/<company>/<name>", methods=["GET", "POST"])
+def edit_worker(company, name):
+    all_employees = get_all_data()
+    employee = None
+    for emp in all_employees:
+        if emp["Company"] == company and emp["Name"] == name:
+            employee = emp
+            break
+    if not employee:
+        return "Employee not found"
+
+    if request.method == "POST":
+        new_data = {
+            "Company": request.form.get("company"),
+            "Name": request.form.get("name"),
+            "Position": request.form.get("position"),
+            "Expiry": request.form.get("expiry"),
+            "Email": request.form.get("email"),
+            "WhatsAppNumber": request.form.get("whatsapp")
+        }
+        update_employee(company, name, new_data)
+        return redirect(url_for("dashboard"))
+
+    return render_template("form.html", data=employee, action="Edit")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(debug=True)
