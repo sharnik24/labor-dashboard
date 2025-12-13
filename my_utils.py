@@ -2,66 +2,77 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 
-# Google Sheets setup
 SHEET_NAME = "labor_data"
-CREDENTIALS_FILE = "credentials.json"  # Path to your Google service account JSON
+CREDENTIALS_FILE = "credentials.json"
 
-scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-credentials = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_FILE, scope)
+scope = [
+    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/drive"
+]
+
+credentials = ServiceAccountCredentials.from_json_keyfile_name(
+    CREDENTIALS_FILE, scope
+)
 client = gspread.authorize(credentials)
 sheet = client.open(SHEET_NAME).sheet1
 
+
 def get_all_data():
-    """Fetch all rows from the sheet"""
-    records = sheet.get_all_records()  # returns list of dicts
-    return records
+    return sheet.get_all_records()
+
 
 def get_companies():
-    """Get unique company names"""
-    records = get_all_data()
-    companies = list({row['Company'] for row in records})
-    return sorted(companies)
+    return sorted({row["Company"] for row in get_all_data()})
 
-def get_employees_by_company(company_name):
-    """Return employees for a given company"""
-    records = get_all_data()
-    employees = [row for row in records if row['Company'] == company_name]
-    return employees
 
-def add_employee(company_name, name, position, expiry, status, email, whatsapp):
-    """Add new employee to the sheet"""
-    # Append to the sheet
-    new_row = [company_name, name, position, expiry, status, email, whatsapp]
-    sheet.append_row(new_row)
-    return True
+def get_employees_by_company(company):
+    records = sheet.get_all_records()
+    return [
+        dict(row, _row=i + 2)
+        for i, row in enumerate(records)
+        if row["Company"] == company
+    ]
 
-def update_employee(row_index, new_data):
-    """Update employee at row_index (1-based)"""
-    # row_index = index in sheet (starting from 2 if header row is 1)
-    sheet.update_cell(row_index, 2, new_data.get("Name", ""))
-    sheet.update_cell(row_index, 3, new_data.get("Position", ""))
-    sheet.update_cell(row_index, 4, new_data.get("Expiry", ""))
-    sheet.update_cell(row_index, 5, new_data.get("Status", ""))
-    sheet.update_cell(row_index, 6, new_data.get("Email", ""))
-    sheet.update_cell(row_index, 7, new_data.get("WhatsApp", ""))
-    return True
+
+def get_employee_by_row(row_id):
+    headers = sheet.row_values(1)
+    values = sheet.row_values(row_id)
+    return dict(zip(headers, values))
+
+
+def add_employee(company, name, position, expiry, status, email, whatsapp):
+    sheet.append_row([
+        company, name, position, expiry, status, email, whatsapp
+    ])
+
+
+def update_employee(row_id, data):
+    sheet.update(f"A{row_id}:G{row_id}", [[
+        data["company"],
+        data["name"],
+        data["position"],
+        data["expiry"],
+        data["status"],
+        data["email"],
+        data["whatsapp"]
+    ]])
+
 
 def get_reminder_employees():
-    """Employees whose expiry is within 30 days"""
     today = datetime.today().date()
-    reminder_list = []
-    records = get_all_data()
-    for row in records:
+    reminders = []
+
+    for row in get_all_data():
         try:
-            expiry_date = datetime.strptime(row['Expiry'], "%Y-%m-%d").date()
-            days_left = (expiry_date - today).days
+            expiry = datetime.strptime(row["Expiry"], "%Y-%m-%d").date()
+            days_left = (expiry - today).days
             if days_left <= 30:
-                reminder_list.append({
-                    "Name": row['Name'],
-                    "Position": row['Position'],
-                    "Expiry": row['Expiry'],
+                reminders.append({
+                    "Name": row["Name"],
+                    "Company": row["Company"],
                     "DaysLeft": days_left
                 })
         except:
-            continue
-    return reminder_list
+            pass
+
+    return reminders
