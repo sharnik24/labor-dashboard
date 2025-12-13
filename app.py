@@ -11,7 +11,6 @@ from my_utils import (
 
 app = Flask(__name__)
 
-
 @app.route("/")
 def dashboard():
     return render_template(
@@ -21,15 +20,14 @@ def dashboard():
         stats=get_stats()
     )
 
-
 @app.route("/employees/<company>")
 def employee_table(company):
+    employees = get_employees_by_company(company)
     return render_template(
         "employee_table.html",
         company=company,
-        employees=get_employees_by_company(company)
+        employees=employees
     )
-
 
 @app.route("/add/<company>", methods=["GET", "POST"])
 def add(company):
@@ -44,20 +42,15 @@ def add(company):
             request.form["whatsapp"]
         )
         return redirect(url_for("employee_table", company=company))
-
     return render_template("form.html", company=company)
-
 
 @app.route("/edit/<int:row_id>", methods=["GET", "POST"])
 def edit(row_id):
     emp = get_employee_by_row(row_id)
-
     if request.method == "POST":
         update_employee(row_id, request.form)
         return redirect(url_for("employee_table", company=emp["Company"]))
-
     return render_template("edit.html", emp=emp)
-
 
 if __name__ == "__main__":
     app.run()
