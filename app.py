@@ -1,60 +1,31 @@
 from flask import Flask, render_template, request, redirect, url_for
-from datetime import date, datetime
-from my_utils import get_all_data, add_employee, update_employee
+from my_utils import get_companies, get_employees_by_company, add_employee, get_reminder_employees
 
 app = Flask(__name__)
 
 @app.route("/")
 def dashboard():
-    try:
-        all_employees = get_all_data()
-        today = date.today()
-        
-        # Prepare reminders
-        reminders = []
-        for emp in all_employees:
-            expiry_date = datetime.strptime(emp['Expiry'], "%Y-%m-%d").date()
-            days_left = (expiry_date - today).days
-            if days_left <= 7:
-                reminders.append({
-                    "Name": emp['Name'],
-                    "Position": emp['Position'],
-                    "Company": emp['Company'],
-                    "Expiry": emp['Expiry'],
-                    "DaysLeft": days_left
-                })
-        
-        # Get unique company list
-        companies = sorted(list({emp['Company'] for emp in all_employees}))
-        
-        return render_template(
-            "dashboard.html",
-            all_employees=all_employees,
-            reminders=reminders,
-            companies=companies,
-            today=today
-        )
-    except Exception as e:
-        return f"Error: {e}"
+    company = request.args.get("company")  # optional
+    companies = get_companies()
+    if company:
+        employees = get_employees_by_company(company)
+    else:
+        employees = []
+    reminders = get_reminder_employees()
+    return render_template("dashboard.html", companies=companies, selected_company=company, employees=employees, reminders=reminders)
 
-@app.route("/company/<company_name>")
-def company_view(company_name):
-    all_employees = get_all_data()
-    company_employees = [emp for emp in all_employees if emp['Company'] == company_name]
-    return render_template(
-        "company.html",
-        employees=company_employees,
-        company_name=company_name
-    )
+@app.route("/add_employee", methods=["POST"])
+def add_employee_route():
+    company = request.form.get("company")
+    name = request.form.get("name")
+    position = request.form.get("position")
+    expiry = request.form.get("expiry")
+    status = request.form.get("status")
+    email = request.form.get("email")
+    whatsapp = request.form.get("whatsapp")
 
-@app.route("/add", methods=["GET", "POST"])
-def add_worker():
-    if request.method == "POST":
-        data = {
-            "Company": request.form.get("company"),
-            "Name": request.form.get("name"),
-            "Position": request.form.get("position"),
-            "Expiry": request.form.get("expiry"),
-            "Email": request.form.get("email"),
-            "WhatsAppNumber": request.form.get("whatsapp")
-        }
+    add_employee(company, name, position, expiry, status, email, whatsapp)
+    return redirect(url_for("dashboard", company=company))
+
+if __name__ == "__main__":
+    app.run(debug=True)
