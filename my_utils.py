@@ -2,6 +2,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 
+# ===== CONFIG =====
 SHEET_NAME = "labor_data"
 CREDENTIALS_FILE = "credentials.json"
 
@@ -17,6 +18,7 @@ client = gspread.authorize(credentials)
 sheet = client.open(SHEET_NAME).sheet1
 
 
+# ===== CORE =====
 def get_all_data():
     return sheet.get_all_records()
 
@@ -34,9 +36,14 @@ def get_employees_by_company(company):
     ]
 
 
+# ✅ THIS FUNCTION FIXES YOUR ERROR
 def get_employee_by_row(row_id):
     headers = sheet.row_values(1)
     values = sheet.row_values(row_id)
+
+    if not values:
+        return None
+
     return dict(zip(headers, values))
 
 
@@ -58,6 +65,7 @@ def update_employee(row_id, data):
     ]])
 
 
+# ===== DASHBOARD =====
 def get_reminder_employees():
     today = datetime.today().date()
     reminders = []
