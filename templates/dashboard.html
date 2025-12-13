@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Labor Management Dashboard</title>
+    <title>Labor Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
@@ -12,10 +12,9 @@
 
 <div class="container mt-4">
 
-<!-- STATS -->
 <div class="row mb-4">
     <div class="col-md-4">
-        <div class="card text-center shadow">
+        <div class="card shadow text-center">
             <div class="card-body">
                 <h6>Total Employees</h6>
                 <h2>{{ stats.total_employees }}</h2>
@@ -23,7 +22,7 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card text-center shadow">
+        <div class="card shadow text-center">
             <div class="card-body">
                 <h6>Companies</h6>
                 <h2>{{ stats.total_companies }}</h2>
@@ -31,7 +30,7 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card text-center shadow text-danger">
+        <div class="card shadow text-center text-danger">
             <div class="card-body">
                 <h6>Expiring Soon</h6>
                 <h2>{{ stats.expiring_soon }}</h2>
@@ -40,7 +39,6 @@
     </div>
 </div>
 
-<!-- COMPANIES -->
 <div class="card shadow mb-4">
     <div class="card-header fw-bold">Companies</div>
     <ul class="list-group list-group-flush">
@@ -53,14 +51,13 @@
     </ul>
 </div>
 
-<!-- REMINDERS -->
 {% if reminders %}
 <div class="card shadow">
     <div class="card-header bg-warning fw-bold">Expiry Alerts</div>
     <ul class="list-group list-group-flush">
         {% for r in reminders %}
         <li class="list-group-item">
-            {{ r.Name }} ({{ r.Company }}) — {{ r.DaysLeft }} days left
+            {{ r.Name }} ({{ r.Company }}) – {{ r.DaysLeft }} days
         </li>
         {% endfor %}
     </ul>
