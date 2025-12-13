@@ -5,7 +5,8 @@ from my_utils import (
     add_employee,
     get_employee_by_row,
     update_employee,
-    get_reminder_employees
+    get_reminder_employees,
+    get_stats
 )
 
 app = Flask(__name__)
@@ -13,14 +14,14 @@ app = Flask(__name__)
 
 @app.route("/")
 def dashboard():
-    company = request.args.get("company")
     companies = get_companies()
     reminders = get_reminder_employees()
+    stats = get_stats()
     return render_template(
         "dashboard.html",
         companies=companies,
-        selected_company=company,
-        reminders=reminders
+        reminders=reminders,
+        stats=stats
     )
 
 
@@ -48,7 +49,7 @@ def add(company):
         )
         return redirect(url_for("employee_table", company=company))
 
-    return render_template("form.html", company=company, emp=None)
+    return render_template("form.html", company=company)
 
 
 @app.route("/edit/<int:row_id>", methods=["GET", "POST"])
