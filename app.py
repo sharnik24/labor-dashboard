@@ -6,6 +6,7 @@ app = Flask(__name__)
 @app.route("/")
 def dashboard():
     all_employees = get_all_data()
+    print("Dashboard data:", all_employees)  # debug print
     return render_template("dashboard.html", all_employees=all_employees, expiring=[])
 
 @app.route("/add", methods=["GET", "POST"])
@@ -19,6 +20,7 @@ def add_worker():
             "Email": request.form.get("email"),
             "WhatsAppNumber": request.form.get("whatsapp")
         }
+        print("Adding employee:", data)  # debug print
         add_employee(data)
         return redirect(url_for("dashboard"))
     return render_template("form.html")
