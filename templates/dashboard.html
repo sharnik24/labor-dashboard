@@ -7,87 +7,92 @@
 <body class="bg-light">
 
 <div class="container-fluid mt-4">
-    <div class="row">
+<div class="row">
 
-        <!-- LEFT PANEL -->
-        <div class="col-md-2">
-            <h6 class="fw-bold">Companies</h6>
+<!-- LEFT SIDEBAR -->
+<div class="col-md-2">
+    <h6 class="fw-bold">Companies</h6>
 
-            <a href="/" class="btn btn-outline-primary w-100 mb-2">
-                All Companies
-            </a>
+    <a href="/" class="btn btn-outline-primary w-100 mb-2">All Companies</a>
 
-            {% for company in companies %}
-                <a href="/?company={{ company }}" class="btn btn-outline-dark w-100 mb-1">
-                    {{ company }}
-                </a>
-            {% endfor %}
+    {% for c in companies %}
+        <a href="{{ url_for('dashboard', company=c) }}" class="btn btn-outline-dark w-100 mb-1">
+            {{ c }}
+        </a>
+    {% endfor %}
+</div>
 
-            <a href="/add" class="btn btn-success w-100 mt-3">
+<!-- MAIN -->
+<div class="col-md-10">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>
+            {{ selected_company if selected_company else "All Employees" }}
+        </h4>
+
+        {% if selected_company %}
+            <a href="{{ url_for('add', company=selected_company) }}" class="btn btn-success">
                 + Add Employee
             </a>
-        </div>
-
-        <!-- MAIN CONTENT -->
-        <div class="col-md-10">
-
-            <h4 class="mb-3">
-                {% if selected_company == "ALL" %}
-                    All Employees
-                {% else %}
-                    {{ selected_company }}
-                {% endif %}
-            </h4>
-
-            <!-- REMINDERS -->
-            {% if reminders %}
-                <div class="alert alert-warning">
-                    <strong>Reminders:</strong><br>
-                    {% for r in reminders %}
-                        {{ r.Name }} ({{ r.Position }}, {{ r.Company }})
-                        expires in {{ r.days_left }} days ({{ r.Expiry }})<br>
-                    {% endfor %}
-                </div>
-            {% endif %}
-
-            <!-- TABLE -->
-            <table class="table table-bordered table-striped bg-white">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Company</th>
-                        <th>Name</th>
-                        <th>Position</th>
-                        <th>Expiry</th>
-                        <th>Days Left</th>
-                        <th>Status</th>
-                        <th>Email</th>
-                        <th>WhatsApp</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for emp in employees %}
-                    <tr>
-                        <td>{{ emp.Company }}</td>
-                        <td>{{ emp.Name }}</td>
-                        <td>{{ emp.Position }}</td>
-                        <td>{{ emp.Expiry }}</td>
-                        <td>{{ emp.days_left }}</td>
-                        <td>
-                            {% if emp.days_left <= 7 %}
-                                <span class="badge bg-danger">Expiring</span>
-                            {% else %}
-                                <span class="badge bg-success">Valid</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ emp.Email }}</td>
-                        <td>{{ emp.WhatsAppNumber }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
-        </div>
+        {% endif %}
     </div>
+
+    {% if reminders %}
+        <div class="alert alert-warning">
+            {% for r in reminders %}
+                {{ r.Name }} ({{ r.Position }}) expires in {{ r.days_left }} days ({{ r.Expiry }})<br>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <table class="table table-bordered table-striped bg-white">
+        <thead class="table-dark">
+        <tr>
+            {% if not selected_company %}
+                <th>Company</th>
+            {% endif %}
+            <th>Name</th>
+            <th>Position</th>
+            <th>Expiry</th>
+            <th>Days Left</th>
+            <th>Status</th>
+            <th>Email</th>
+            <th>WhatsApp</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        {% for e in employees %}
+        <tr>
+            {% if not selected_company %}
+                <td>{{ e.Company }}</td>
+            {% endif %}
+            <td>{{ e.Name }}</td>
+            <td>{{ e.Position }}</td>
+            <td>{{ e.Expiry }}</td>
+            <td>{{ e.days_left }}</td>
+            <td>
+                {% if e.days_left <= 7 %}
+                    <span class="badge bg-danger">Expiring</span>
+                {% else %}
+                    <span class="badge bg-success">Valid</span>
+                {% endif %}
+            </td>
+            <td>{{ e.Email }}</td>
+            <td>{{ e.WhatsAppNumber }}</td>
+            <td>
+                <a href="{{ url_for('edit', company=e.Company, name=e.Name) }}" class="btn btn-sm btn-primary">
+                    Edit
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+</div>
 </div>
 
 </body>
