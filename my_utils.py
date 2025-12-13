@@ -1,46 +1,43 @@
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
+SHEET_NAME = "labor_data"  # your sheet name
+
 def connect_sheet():
-    try:
-        scope = [
-            "https://spreadsheets.google.com/feeds",
-            "https://www.googleapis.com/auth/spreadsheets",
-            "https://www.googleapis.com/auth/drive.file",
-            "https://www.googleapis.com/auth/drive"
-        ]
-        creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
-        client = gspread.authorize(creds)
-        sheet = client.open("labor_data").sheet1  # Make sure the sheet name is exactly "LaborData"
-        return sheet
-    except Exception as e:
-        print("Error connecting to Google Sheet:", e)
-        return None
+    scope = [
+        "https://spreadsheets.google.com/feeds",
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive.file",
+        "https://www.googleapis.com/auth/drive"
+    ]
+    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+    client = gspread.authorize(creds)
+    sheet = client.open(SHEET_NAME).sheet1
+    return sheet
 
 def get_all_data():
     sheet = connect_sheet()
-    if sheet is None:
-        return []
-    try:
-        records = sheet.get_all_records()
-        return records
-    except Exception as e:
-        print("Error reading data from sheet:", e)
-        return []
+    return sheet.get_all_records()
 
 def add_employee(data):
     sheet = connect_sheet()
-    if sheet is None:
-        print("Cannot add employee, sheet not connected")
-        return
-    try:
-        sheet.append_row([
-            data["Company"],
-            data["Name"],
-            data["Position"],
-            data["Expiry"],
-            data["Email"],
-            data["WhatsAppNumber"]
-        ])
-    except Exception as e:
-        print("Error adding employee:", e)
+    sheet.append_row([
+        data["Company"],
+        data["Name"],
+        data["Position"],
+        data["Expiry"],
+        data["Email"],
+        data["WhatsAppNumber"]
+    ])
+
+def update_employee(old_company, old_name, new_data):
+    sheet = connect_sheet()
+    all_records = sheet.get_all_records()
+    for i, row in enumerate(all_records):
+        if row["Company"] == old_company and row["Name"] == old_name:
+            # Google Sheet rows are 1-indexed and include header row
+            row_number = i + 2
+            sheet.update(f"A{row_number}", [[new_data["Company"], new_data["Name"], new_data["Position"],
+                                             new_data["Expiry"], new_data["Email"], new_data["WhatsAppNumber"]]])
+            return True
+    return False
