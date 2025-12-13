@@ -1,7 +1,8 @@
 import gspread
 from google.oauth2.service_account import Credentials
+from datetime import datetime
 
-# Setup Google Sheets client
+# Google Sheets setup
 SCOPE = ["https://www.googleapis.com/auth/spreadsheets", 
          "https://www.googleapis.com/auth/drive"]
 CREDS_FILE = "credentials.json"
@@ -10,20 +11,31 @@ SHEET_NAME = "labor_data"
 try:
     creds = Credentials.from_service_account_file(CREDS_FILE, scopes=SCOPE)
     client = gspread.authorize(creds)
-    try:
-        sheet = client.open(SHEET_NAME).sheet1
-    except gspread.SpreadsheetNotFound:
-        sheet = None
-        print(f"Spreadsheet '{SHEET_NAME}' not found. Please share it with the service account.")
+    sheet = client.open(SHEET_NAME).sheet1
+except FileNotFoundError:
+    sheet = None
+    print(f"Credentials file '{CREDS_FILE}' not found.")
+except gspread.SpreadsheetNotFound:
+    sheet = None
+    print(f"Spreadsheet '{SHEET_NAME}' not found. Share it with the service account.")
 except Exception as e:
     sheet = None
-    print("Error initializing Google Sheets client:", e)
+    print("Error initializing Google Sheets:", e)
 
 def get_all_data():
     if not sheet:
         return []
     try:
-        return sheet.get_all_records()
+        data = sheet.get_all_records()
+        for row in data:
+            try:
+                expiry_date = datetime.strptime(row.get("Expiry", ""), "%Y-%m-%d")
+                row["Days Left"] = (expiry_date - datetime.now()).days
+                row["Status"] = "Expired" if row["Days Left"] < 0 else "Active"
+            except:
+                row["Days Left"] = "-"
+                row["Status"] = "Unknown"
+        return data
     except Exception as e:
         print("Error fetching data:", e)
         return []
