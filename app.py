@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for
+from datetime import date
 from my_utils import get_all_data, add_employee, update_employee
 
 app = Flask(__name__)
@@ -6,7 +7,8 @@ app = Flask(__name__)
 @app.route("/")
 def dashboard():
     all_employees = get_all_data()
-    return render_template("dashboard.html", all_employees=all_employees)
+    today = date.today().isoformat()
+    return render_template("dashboard.html", all_employees=all_employees, today=today)
 
 @app.route("/add", methods=["GET", "POST"])
 def add_worker():
@@ -26,11 +28,7 @@ def add_worker():
 @app.route("/edit/<company>/<name>", methods=["GET", "POST"])
 def edit_worker(company, name):
     all_employees = get_all_data()
-    employee = None
-    for emp in all_employees:
-        if emp["Company"] == company and emp["Name"] == name:
-            employee = emp
-            break
+    employee = next((emp for emp in all_employees if emp["Company"] == company and emp["Name"] == name), None)
     if not employee:
         return "Employee not found"
 
