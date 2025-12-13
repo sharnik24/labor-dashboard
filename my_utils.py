@@ -1,33 +1,46 @@
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-# Connect to Google Sheet
 def connect_sheet():
-    scope = ["https://spreadsheets.google.com/feeds",
-             "https://www.googleapis.com/auth/spreadsheets",
-             "https://www.googleapis.com/auth/drive.file",
-             "https://www.googleapis.com/auth/drive"]
+    try:
+        scope = [
+            "https://spreadsheets.google.com/feeds",
+            "https://www.googleapis.com/auth/spreadsheets",
+            "https://www.googleapis.com/auth/drive.file",
+            "https://www.googleapis.com/auth/drive"
+        ]
+        creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+        client = gspread.authorize(creds)
+        sheet = client.open("labor_data").sheet1  # Make sure the sheet name is exactly "LaborData"
+        return sheet
+    except Exception as e:
+        print("Error connecting to Google Sheet:", e)
+        return None
 
-    creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
-    client = gspread.authorize(creds)
-    sheet = client.open("labor_data").sheet1  # Make sure your sheet name matches
-    return sheet
-
-# Get all employees
 def get_all_data():
     sheet = connect_sheet()
-    records = sheet.get_all_records()  # Returns a list of dicts
-    return records
+    if sheet is None:
+        return []
+    try:
+        records = sheet.get_all_records()
+        return records
+    except Exception as e:
+        print("Error reading data from sheet:", e)
+        return []
 
-# Add new employee
 def add_employee(data):
     sheet = connect_sheet()
-    sheet.append_row([
-        data["Company"],
-        data["Name"],
-        data["Position"],
-        data["Expiry"],
-        data["Email"],
-        data["WhatsAppNumber"]
-    ])
-
+    if sheet is None:
+        print("Cannot add employee, sheet not connected")
+        return
+    try:
+        sheet.append_row([
+            data["Company"],
+            data["Name"],
+            data["Position"],
+            data["Expiry"],
+            data["Email"],
+            data["WhatsAppNumber"]
+        ])
+    except Exception as e:
+        print("Error adding employee:", e)
