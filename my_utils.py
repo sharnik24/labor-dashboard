@@ -17,15 +17,12 @@ credentials = ServiceAccountCredentials.from_json_keyfile_name(
 client = gspread.authorize(credentials)
 sheet = client.open(SHEET_NAME).sheet1
 
-
 # ===== CORE =====
 def get_all_data():
     return sheet.get_all_records()
 
-
 def get_companies():
     return sorted({row["Company"] for row in get_all_data()})
-
 
 def get_employees_by_company(company):
     records = sheet.get_all_records()
@@ -35,23 +32,18 @@ def get_employees_by_company(company):
         if row["Company"] == company
     ]
 
-
-# ✅ THIS FUNCTION FIXES YOUR ERROR
+# ✅ MUST HAVE: fixes your import error
 def get_employee_by_row(row_id):
     headers = sheet.row_values(1)
     values = sheet.row_values(row_id)
-
     if not values:
         return None
-
     return dict(zip(headers, values))
-
 
 def add_employee(company, name, position, expiry, status, email, whatsapp):
     sheet.append_row([
         company, name, position, expiry, status, email, whatsapp
     ])
-
 
 def update_employee(row_id, data):
     sheet.update(f"A{row_id}:G{row_id}", [[
@@ -64,12 +56,10 @@ def update_employee(row_id, data):
         data["whatsapp"]
     ]])
 
-
 # ===== DASHBOARD =====
 def get_reminder_employees():
     today = datetime.today().date()
     reminders = []
-
     for row in get_all_data():
         try:
             expiry = datetime.strptime(row["Expiry"], "%Y-%m-%d").date()
@@ -83,9 +73,7 @@ def get_reminder_employees():
                 })
         except:
             pass
-
     return reminders
-
 
 def get_stats():
     data = get_all_data()
